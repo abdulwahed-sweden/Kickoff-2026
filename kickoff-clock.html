@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kickoff — Ambient Clock</title>
+<style>
+  /* Inter — chosen for maximum legibility across a room; degrades to system-ui offline. */
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+  :root{
+    --clock:#FFB23E;          /* clock amber */
+    --accent:#FF6A3D;         /* vermilion: prominent match time + the "OFF" wordmark */
+    --text:#F2EFE6;           /* primary text */
+    --text2:#D8D4C8;          /* secondary text */
+    --label:#A7A296;          /* label floor */
+    --dim:#7E7A70;            /* muted list text — the lower-colour zone */
+    --punct:#5A564C;          /* punctuation only (vs) */
+  }
+
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+
+  body{
+    font-family:'Inter',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+    background:radial-gradient(130% 100% at 50% 22%, #1A1D22 0%, #0C0D10 58%, #060607 100%);
+    color:var(--text);
+    min-height:100vh;
+    display:flex;align-items:center;justify-content:center;
+    padding:6vh 6vw;
+    overflow:hidden;
+    cursor:none;
+    font-variant-numeric:tabular-nums;
+    -webkit-font-smoothing:antialiased;
+    text-rendering:optimizeLegibility;
+  }
+  body::after{
+    content:"";position:fixed;inset:0;pointer-events:none;
+    background:radial-gradient(120% 95% at 50% 38%, transparent 52%, rgba(0,0,0,.5) 100%);
+  }
+
+  /* corner chrome */
+  .wordmark{
+    position:absolute;top:5vh;left:6vw;
+    font-weight:900;letter-spacing:.02em;font-size:clamp(15px,2vw,26px);
+  }
+  .wordmark span{color:var(--accent)}
+  .date{
+    position:absolute;top:5.4vh;right:6vw;
+    font-size:clamp(11px,1.3vw,17px);font-weight:600;letter-spacing:.16em;color:var(--label);
+  }
+
+  /* ONE vertical stack, generous even rhythm between the zones */
+  .stack{
+    display:flex;flex-direction:column;align-items:center;
+    gap:clamp(38px,7vh,96px);
+    width:100%;max-width:1120px;
+  }
+
+  /* hero: clock + place (tight internal spacing — they belong together) */
+  .hero{display:flex;flex-direction:column;align-items:center;gap:clamp(10px,1.8vh,20px)}
+  .clock{
+    display:flex;align-items:baseline;justify-content:center;
+    line-height:.9;letter-spacing:-.01em;text-shadow:0 0 46px rgba(255,150,40,.30);
+  }
+  .clock .h,.clock .m{font-weight:800;color:var(--clock);font-size:clamp(62px,12.5vw,168px)}
+  .clock .sep{
+    font-weight:600;color:rgba(255,178,62,.55);
+    font-size:clamp(50px,10vw,134px);margin:0 clamp(6px,1vw,15px);transform:translateY(-.04em);
+  }
+  .clock .sec{
+    align-self:center;font-size:clamp(15px,2.1vw,33px);font-weight:700;letter-spacing:.04em;
+    color:var(--clock);background:rgba(255,178,62,.10);border:1px solid rgba(255,178,62,.26);
+    border-radius:8px;padding:.18em .42em;margin-left:clamp(9px,1.2vw,18px);
+  }
+  .clock .ampm{
+    align-self:center;font-size:clamp(14px,1.8vw,28px);font-weight:700;letter-spacing:.12em;
+    color:var(--label);margin-left:clamp(7px,.9vw,13px);
+  }
+  .place{
+    display:flex;align-items:center;gap:.7em;
+    font-size:clamp(12px,1.5vw,20px);font-weight:600;letter-spacing:.26em;color:var(--label);text-transform:uppercase;
+  }
+  .place .dot{width:.34em;height:.34em;border-radius:50%;background:var(--clock);opacity:.8}
+
+  /* prominent match — the actual next fixture, full colour */
+  .match{display:flex;align-items:center;justify-content:center;gap:clamp(18px,3.6vw,48px);width:100%}
+  .side{display:flex;flex-direction:column;align-items:center;gap:clamp(9px,1.3vh,14px);flex:1;max-width:30%}
+  .flag-lg{
+    height:clamp(32px,4.4vw,64px);aspect-ratio:3/2;border-radius:6px;overflow:hidden;
+    box-shadow:0 0 0 1px rgba(255,255,255,.18), 0 8px 20px rgba(0,0,0,.5);
+  }
+  .flag-lg img{display:block;width:100%;height:100%;object-fit:cover}
+  .flag-lg svg{display:block;width:100%;height:100%}
+  .team-lg{font-size:clamp(14px,1.7vw,24px);font-weight:700;color:var(--text);text-align:center}
+  #centre{display:flex;align-items:center;justify-content:center;min-width:clamp(140px,20vw,300px)}
+  .when{display:flex;flex-direction:column;align-items:center;gap:clamp(3px,.6vh,7px)}
+  .when-date{font-size:clamp(12px,1.4vw,18px);font-weight:700;letter-spacing:.14em;color:var(--label)}
+  .when-time{font-size:clamp(32px,5vw,68px);font-weight:800;line-height:1;letter-spacing:-.02em;color:var(--accent)}
+  .when-lbl{font-size:clamp(10px,1.1vw,14px);font-weight:600;letter-spacing:.16em;color:var(--label)}
+  .live{
+    font-size:clamp(20px,3.4vw,48px);font-weight:900;letter-spacing:.03em;color:#fff;background:var(--accent);
+    padding:.3em .58em;border-radius:10px;box-shadow:0 0 30px rgba(255,106,61,.4);
+    animation:pulse 1.2s ease-in-out infinite;
+  }
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.8}}
+
+  /* upcoming — a low-colour list: lead row brighter, the rest muted & grayscale */
+  .upcoming{
+    width:100%;display:flex;flex-direction:column;
+    background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.055);border-radius:14px;
+    padding:clamp(12px,2vh,20px) clamp(18px,2.6vw,30px);
+  }
+  .up-eyebrow{
+    font-size:clamp(9px,1vw,12px);font-weight:700;letter-spacing:.22em;color:var(--punct);
+    margin-bottom:clamp(8px,1.4vh,14px);
+  }
+  .up-row{
+    display:flex;align-items:center;justify-content:space-between;gap:clamp(14px,3vw,30px);
+    padding:clamp(9px,1.5vh,15px) 0;
+  }
+  .up-row + .up-row{border-top:1px solid rgba(255,255,255,.05)}
+  .up-teams{display:flex;align-items:center;gap:clamp(8px,1.3vw,13px);min-width:0}
+  .fg{aspect-ratio:3/2;border-radius:3px;overflow:hidden;flex:none}
+  .fg img{display:block;width:100%;height:100%;object-fit:cover}
+  .fg svg{display:block;width:100%;height:100%}
+  .nm{white-space:nowrap}
+  .up-vs{color:var(--punct);font-weight:600;font-size:.82em}
+  .up-when{font-weight:700;letter-spacing:.04em;white-space:nowrap}
+
+  /* lead tier — the match right after the prominent one (some colour) */
+  .up-row.lead .nm{font-size:clamp(13px,1.6vw,21px);font-weight:700;color:var(--text)}
+  .up-row.lead .fg{height:clamp(18px,2.4vw,28px);box-shadow:0 0 0 1px rgba(255,255,255,.14)}
+  .up-row.lead .up-when{font-size:clamp(13px,1.55vw,19px);color:var(--text2)}
+
+  /* dim tier — fewer colours: grayscale flags, muted text */
+  .up-row.dim .nm{font-size:clamp(12px,1.4vw,17px);font-weight:600;color:var(--dim)}
+  .up-row.dim .fg{height:clamp(14px,1.9vw,21px);filter:grayscale(1) brightness(.92) opacity(.72)}
+  .up-row.dim .up-when{font-size:clamp(12px,1.4vw,16px);color:var(--dim)}
+
+  .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+  @media (prefers-reduced-motion: reduce){ .live{animation:none} }
+</style>
+</head>
+<body>
+  <h1 class="sr-only">Kickoff ambient clock: a large amber clock, the next World Cup 2026 match with its Stockholm kickoff date and time, and a muted list of the matches after it.</h1>
+
+  <div class="wordmark">KICK<span>OFF</span></div>
+  <div class="date" id="date">—</div>
+
+  <div class="stack">
+    <div class="hero">
+      <div class="clock" id="clock">—</div>
+      <div class="place"><span class="dot"></span><span id="placeText">—</span></div>
+    </div>
+
+    <div class="match">
+      <div class="side">
+        <div class="flag-lg" id="homeFlag"></div>
+        <div class="team-lg" id="homeName">—</div>
+      </div>
+      <div id="centre"></div>
+      <div class="side">
+        <div class="flag-lg" id="awayFlag"></div>
+        <div class="team-lg" id="awayName">—</div>
+      </div>
+    </div>
+
+    <div class="upcoming" id="upcoming"></div>
+  </div>
+
+<script>
+/* ============================ CONFIG ============================ */
+const CLOCK_TYPE      = '24h'; // '24h' → 17:47   |   '12h' → 5:47 PM
+const SHOW_SECONDS    = true;
+const LIVE_WINDOW_MIN = 120;   // keep a match on screen as LIVE for this long after kickoff
+const MATCH_TZ        = 'Europe/Stockholm'; // all match dates/times shown in this timezone
+const UPCOMING_COUNT  = 4;     // matches listed below the prominent one (1 lead + the rest dimmed)
+/* =============================================================== */
+
+/* Real WC2026 group-stage fixtures (FIFA World Cup, USA/Canada/Mexico).
+   Kickoff stored in UTC; source times are US Eastern (June = EDT = UTC-4),
+   cross-checked against ESPN's schedule. Verify against FIFA.com near kickoff. */
+const FIXTURES = [
+  // Fri 12 Jun
+  { home:'Canada',        away:'Bosnia & Herzegovina', hc:'CAN', ac:'BIH', kickoffUTC:'2026-06-12T19:00:00Z' },
+  { home:'United States', away:'Paraguay',             hc:'USA', ac:'PAR', kickoffUTC:'2026-06-13T01:00:00Z' },
+  // Sat 13 Jun
+  { home:'Qatar',         away:'Switzerland',          hc:'QAT', ac:'SUI', kickoffUTC:'2026-06-13T19:00:00Z' },
+  { home:'Brazil',        away:'Morocco',              hc:'BRA', ac:'MAR', kickoffUTC:'2026-06-13T22:00:00Z' },
+  { home:'Haiti',         away:'Scotland',             hc:'HAI', ac:'SCO', kickoffUTC:'2026-06-14T01:00:00Z' },
+  { home:'Australia',     away:'Türkiye',              hc:'AUS', ac:'TUR', kickoffUTC:'2026-06-14T04:00:00Z' },
+  // Sun 14 Jun
+  { home:'Germany',       away:'Curaçao',              hc:'GER', ac:'CUW', kickoffUTC:'2026-06-14T17:00:00Z' },
+  { home:'Netherlands',   away:'Japan',                hc:'NED', ac:'JPN', kickoffUTC:'2026-06-14T20:00:00Z' },
+  { home:'Ivory Coast',   away:'Ecuador',              hc:'CIV', ac:'ECU', kickoffUTC:'2026-06-14T23:00:00Z' },
+  { home:'Sweden',        away:'Tunisia',              hc:'SWE', ac:'TUN', kickoffUTC:'2026-06-15T02:00:00Z' },
+  // Mon 15 Jun
+  { home:'Spain',         away:'Cape Verde',           hc:'ESP', ac:'CPV', kickoffUTC:'2026-06-15T16:00:00Z' },
+  { home:'Belgium',       away:'Egypt',                hc:'BEL', ac:'EGY', kickoffUTC:'2026-06-15T22:00:00Z' },
+  { home:'Saudi Arabia',  away:'Uruguay',              hc:'KSA', ac:'URU', kickoffUTC:'2026-06-15T22:00:00Z' },
+  { home:'Iran',          away:'New Zealand',          hc:'IRN', ac:'NZL', kickoffUTC:'2026-06-16T04:00:00Z' },
+  // Tue 16 Jun
+  { home:'France',        away:'Senegal',              hc:'FRA', ac:'SEN', kickoffUTC:'2026-06-16T19:00:00Z' },
+  { home:'Iraq',          away:'Norway',               hc:'IRQ', ac:'NOR', kickoffUTC:'2026-06-16T22:00:00Z' },
+  { home:'Argentina',     away:'Algeria',              hc:'ARG', ac:'ALG', kickoffUTC:'2026-06-17T01:00:00Z' },
+  { home:'Austria',       away:'Jordan',               hc:'AUT', ac:'JOR', kickoffUTC:'2026-06-17T04:00:00Z' },
+];
+
+/* trigram → flagcdn ISO code (photo-accurate flags when online) */
+const ISO = {
+  QAT:'qa', SUI:'ch', BRA:'br', MAR:'ma', HAI:'ht', SCO:'gb-sct', AUS:'au', TUR:'tr',
+  GER:'de', CUW:'cw', NED:'nl', JPN:'jp', SWE:'se', TUN:'tn', ESP:'es', CPV:'cv',
+  CAN:'ca', BIH:'ba', USA:'us', PAR:'py', CIV:'ci', ECU:'ec', BEL:'be', EGY:'eg',
+  KSA:'sa', URU:'uy', IRN:'ir', NZL:'nz', FRA:'fr', SEN:'sn', IRQ:'iq', NOR:'no',
+  ARG:'ar', ALG:'dz', AUT:'at', JOR:'jo',
+};
+
+/* Offline fallback — simplified inline-SVG flags shown only if the real image fails to load. */
+const FLAGS = {
+  QAT:'<rect width="84" height="58" fill="#8A1538"/><rect width="26" height="58" fill="#fff"/>',
+  SUI:'<rect width="84" height="58" fill="#D52B1E"/><rect x="36" y="13" width="12" height="32" fill="#fff"/><rect x="26" y="23" width="32" height="12" fill="#fff"/>',
+  BRA:'<rect width="84" height="58" fill="#009739"/><polygon points="42,7 78,29 42,51 6,29" fill="#FEDD00"/><circle cx="42" cy="29" r="12" fill="#012169"/>',
+  MAR:'<rect width="84" height="58" fill="#C1272D"/><path d="M42 18 l3.2 10 10.5 0 -8.5 6.2 3.2 10 -8.5-6.2 -8.5 6.2 3.2-10 -8.5-6.2 10.5 0 z" fill="none" stroke="#006233" stroke-width="1.8"/>',
+  HAI:'<rect width="84" height="29" fill="#00209F"/><rect y="29" width="84" height="29" fill="#D21034"/>',
+  SCO:'<rect width="84" height="58" fill="#0065BF"/><path d="M0 0 L84 58 M84 0 L0 58" stroke="#fff" stroke-width="9"/>',
+  AUS:'<rect width="84" height="58" fill="#00247D"/><path d="M0 0 L42 29 M42 0 L0 29" stroke="#fff" stroke-width="2"/><path d="M21 0 V29 M0 14.5 H42" stroke="#fff" stroke-width="3.5"/><path d="M21 0 V29 M0 14.5 H42" stroke="#E4002B" stroke-width="1.6"/><circle cx="63" cy="40" r="3.2" fill="#fff"/><circle cx="63" cy="17" r="2.2" fill="#fff"/>',
+  TUR:'<rect width="84" height="58" fill="#E30A17"/><circle cx="33" cy="29" r="13" fill="#fff"/><circle cx="38" cy="29" r="10.5" fill="#E30A17"/><polygon points="53,29 47.4,30.8 50.9,26 50.9,32 47.4,27.2" fill="#fff"/>',
+  GER:'<rect width="84" height="58" fill="#000"/><rect y="19.3" width="84" height="19.3" fill="#DD0000"/><rect y="38.6" width="84" height="19.4" fill="#FFCE00"/>',
+  CUW:'<rect width="84" height="58" fill="#002B7F"/><rect y="40" width="84" height="8" fill="#F9E814"/><polygon points="18,17 20,23.5 26.5,23.5 21.2,27.5 23.2,34 18,30 12.8,34 14.8,27.5 9.5,23.5 16,23.5" fill="#fff"/><polygon points="30,26 31.4,30 35.5,30 32.2,32.5 33.5,36.5 30,34 26.5,36.5 27.8,32.5 24.5,30 28.6,30" fill="#fff"/>',
+  NED:'<rect width="84" height="58" fill="#21468B"/><rect width="84" height="38.6" fill="#fff"/><rect width="84" height="19.3" fill="#AE1C28"/>',
+  JPN:'<rect width="84" height="58" fill="#fff"/><circle cx="42" cy="29" r="15" fill="#BC002D"/>',
+  SWE:'<rect width="84" height="58" fill="#006AA7"/><rect x="24" width="11" height="58" fill="#FECC00"/><rect y="23.5" width="84" height="11" fill="#FECC00"/>',
+  TUN:'<rect width="84" height="58" fill="#E70013"/><circle cx="42" cy="29" r="15" fill="#fff"/><circle cx="44" cy="29" r="10" fill="#E70013"/><circle cx="48" cy="29" r="8.5" fill="#fff"/><polygon points="50,29 46.6,30.1 48.7,27.2 48.7,30.8 46.6,27.9" fill="#E70013"/>',
+  ESP:'<rect width="84" height="58" fill="#AA151B"/><rect y="14.5" width="84" height="29" fill="#F1BF00"/>',
+  CPV:'<rect width="84" height="58" fill="#003893"/><rect y="32" width="84" height="6" fill="#fff"/><rect y="38" width="84" height="4" fill="#CF2027"/><rect y="42" width="84" height="6" fill="#fff"/>',
+  CAN:'<rect width="84" height="58" fill="#fff"/><rect width="21" height="58" fill="#D52B1E"/><rect x="63" width="21" height="58" fill="#D52B1E"/><polygon points="42,17 45,27 53,27 46,32 49,42 42,35 35,42 38,32 31,27 39,27" fill="#D52B1E"/>',
+  BIH:'<rect width="84" height="58" fill="#002395"/><polygon points="28,4 70,4 70,54" fill="#FECB00"/>',
+  USA:'<rect width="84" height="58" fill="#fff"/><g fill="#B22234"><rect width="84" height="4.5"/><rect y="9" width="84" height="4.5"/><rect y="18" width="84" height="4.5"/><rect y="27" width="84" height="4.5"/><rect y="36" width="84" height="4.5"/><rect y="45" width="84" height="4.5"/><rect y="53.5" width="84" height="4.5"/></g><rect width="36" height="31" fill="#3C3B6E"/>',
+  PAR:'<rect width="84" height="58" fill="#fff"/><rect width="84" height="19.3" fill="#D52B1E"/><rect y="38.6" width="84" height="19.4" fill="#0038A8"/>',
+  CIV:'<rect width="84" height="58" fill="#fff"/><rect width="28" height="58" fill="#F77F00"/><rect x="56" width="28" height="58" fill="#009E60"/>',
+  ECU:'<rect width="84" height="58" fill="#FFD100"/><rect y="29" width="84" height="14.5" fill="#0072CE"/><rect y="43.5" width="84" height="14.5" fill="#EF3340"/>',
+  BEL:'<rect width="84" height="58" fill="#000"/><rect x="28" width="28" height="58" fill="#FAE042"/><rect x="56" width="28" height="58" fill="#ED2939"/>',
+  EGY:'<rect width="84" height="58" fill="#fff"/><rect width="84" height="19.3" fill="#CE1126"/><rect y="38.6" width="84" height="19.4" fill="#000"/>',
+  KSA:'<rect width="84" height="58" fill="#006C35"/><rect x="14" y="33" width="56" height="3.4" fill="#fff"/>',
+  URU:'<rect width="84" height="58" fill="#fff"/><g fill="#0038A8"><rect y="6.4" width="84" height="6.4"/><rect y="19.2" width="84" height="6.4"/><rect y="32" width="84" height="6.4"/><rect y="44.8" width="84" height="6.4"/></g><rect width="33" height="32" fill="#fff"/><circle cx="16.5" cy="16" r="7" fill="#FCD116"/>',
+  IRN:'<rect width="84" height="58" fill="#fff"/><rect width="84" height="19.3" fill="#239F40"/><rect y="38.6" width="84" height="19.4" fill="#DA0000"/>',
+  NZL:'<rect width="84" height="58" fill="#00247D"/><path d="M0 0 L42 29 M42 0 L0 29" stroke="#fff" stroke-width="2"/><path d="M21 0 V29 M0 14.5 H42" stroke="#fff" stroke-width="3.5"/><path d="M21 0 V29 M0 14.5 H42" stroke="#CC142B" stroke-width="1.6"/><circle cx="64" cy="16" r="2.4" fill="#CC142B"/><circle cx="58" cy="38" r="2.4" fill="#CC142B"/><circle cx="70" cy="42" r="2.4" fill="#CC142B"/>',
+  FRA:'<rect width="84" height="58" fill="#fff"/><rect width="28" height="58" fill="#002395"/><rect x="56" width="28" height="58" fill="#ED2939"/>',
+  SEN:'<rect width="84" height="58" fill="#FDEF42"/><rect width="28" height="58" fill="#00853F"/><rect x="56" width="28" height="58" fill="#E31B23"/><polygon points="42,22 44,28 50,28 45,32 47,38 42,34 37,38 39,32 34,28 40,28" fill="#00853F"/>',
+  IRQ:'<rect width="84" height="58" fill="#fff"/><rect width="84" height="19.3" fill="#CE1126"/><rect y="38.6" width="84" height="19.4" fill="#000"/>',
+  NOR:'<rect width="84" height="58" fill="#BA0C2F"/><rect x="24" width="14" height="58" fill="#fff"/><rect y="22" width="84" height="14" fill="#fff"/><rect x="27.5" width="7" height="58" fill="#00205B"/><rect y="25.5" width="84" height="7" fill="#00205B"/>',
+  ARG:'<rect width="84" height="58" fill="#fff"/><rect width="84" height="19.3" fill="#74ACDF"/><rect y="38.6" width="84" height="19.4" fill="#74ACDF"/><circle cx="42" cy="29" r="5" fill="#FCBF49"/>',
+  ALG:'<rect width="84" height="58" fill="#fff"/><rect width="42" height="58" fill="#006233"/><circle cx="46" cy="29" r="11" fill="#D21034"/><circle cx="50" cy="29" r="9" fill="#fff"/><polygon points="55,29 49.5,30.8 53,26 53,32 49.5,27.2" fill="#D21034"/>',
+  AUT:'<rect width="84" height="58" fill="#ED2939"/><rect y="19.3" width="84" height="19.3" fill="#fff"/>',
+  JOR:'<rect width="84" height="58" fill="#fff"/><rect width="84" height="19.3" fill="#000"/><rect y="38.6" width="84" height="19.4" fill="#007A3D"/><polygon points="0,0 34,29 0,58" fill="#CE1126"/>',
+};
+
+function setFlag(el, code){
+  el.innerHTML = '';
+  const img = document.createElement('img');
+  img.alt = ''; img.decoding = 'async';
+  img.addEventListener('error', () => {
+    el.innerHTML = `<svg viewBox="0 0 84 58" preserveAspectRatio="none">${FLAGS[code] || ''}</svg>`;
+  }, { once:true });
+  img.src = `https://flagcdn.com/${ISO[code] || 'xx'}.svg`;
+  el.appendChild(img);
+}
+
+/* ---- timezone / locale helpers ---- */
+const TZ = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+const CITY = (TZ.split('/').pop() || TZ).replace(/_/g,' ');
+function shortTZName(d, tz){
+  const opt = { timeZoneName:'short' };
+  if (tz) opt.timeZone = tz;
+  const p = new Intl.DateTimeFormat('en-US',opt).formatToParts(d).find(x => x.type === 'timeZoneName');
+  return p ? p.value : '';
+}
+function matchDate(iso){
+  return new Date(iso).toLocaleDateString('en-GB',
+    {weekday:'short',day:'numeric',month:'short',timeZone:MATCH_TZ}).toUpperCase();
+}
+function matchTime(iso){
+  return new Date(iso).toLocaleTimeString('en-GB',
+    {hour:'2-digit',minute:'2-digit',hour12:false,timeZone:MATCH_TZ});
+}
+
+/* ---- DOM refs ---- */
+const $clock = document.getElementById('clock');
+const $placeText = document.getElementById('placeText');
+const $date  = document.getElementById('date');
+const $homeFlag = document.getElementById('homeFlag');
+const $awayFlag = document.getElementById('awayFlag');
+const $homeName = document.getElementById('homeName');
+const $awayName = document.getElementById('awayName');
+const $centre = document.getElementById('centre');
+const $upcoming = document.getElementById('upcoming');
+
+let currentKey = null;
+const two = n => String(n).padStart(2,'0');
+
+/* ---- clock ---- */
+function renderClock(now){
+  let h = now.getHours();
+  const m = two(now.getMinutes());
+  const s = two(now.getSeconds());
+  let hourStr, ampm = '';
+  if (CLOCK_TYPE === '12h'){
+    ampm = h >= 12 ? 'PM' : 'AM';
+    h = h % 12; if (h === 0) h = 12;
+    hourStr = String(h);
+  } else {
+    hourStr = two(h);
+  }
+  $clock.innerHTML =
+    `<span class="h">${hourStr}</span><span class="sep">:</span><span class="m">${m}</span>` +
+    (SHOW_SECONDS ? `<span class="sec">${s}</span>` : '') +
+    (ampm ? `<span class="ampm">${ampm}</span>` : '');
+
+  $placeText.textContent = `${CITY} · ${shortTZName(now)}`;
+  $date.textContent = now.toLocaleDateString('en-US',
+    {weekday:'short',day:'numeric',month:'short'}).toUpperCase().replace(/,/g,'');
+}
+
+/* ---- fixture selection: first fixture still within its LIVE window ---- */
+function pickFixtures(nowMs){
+  const win = LIVE_WINDOW_MIN * 60000;
+  for (let i = 0; i < FIXTURES.length; i++){
+    const k = Date.parse(FIXTURES[i].kickoffUTC);
+    if (nowMs < k + win) return { cur:FIXTURES[i], idx:i, kickoff:k };
+  }
+  return { cur:null, idx:-1, kickoff:null };
+}
+
+function rowHTML(f, tier){
+  return `<div class="up-row ${tier}">` +
+    `<div class="up-teams">` +
+      `<div class="fg" data-flag="${f.hc}"></div>` +
+      `<span class="nm">${f.home}</span>` +
+      `<span class="up-vs">vs</span>` +
+      `<span class="nm">${f.away}</span>` +
+      `<div class="fg" data-flag="${f.ac}"></div>` +
+    `</div>` +
+    `<span class="up-when">${matchDate(f.kickoffUTC)} · ${matchTime(f.kickoffUTC)}</span>` +
+  `</div>`;
+}
+
+function renderMatches(now){
+  const nowMs = now.getTime();
+  const { cur, idx, kickoff } = pickFixtures(nowMs);
+
+  if (!cur){
+    if (currentKey !== 'done'){
+      currentKey = 'done';
+      $homeFlag.innerHTML = $awayFlag.innerHTML = '';
+      $homeName.textContent = $awayName.textContent = '';
+      $upcoming.innerHTML = '';
+    }
+    $centre.innerHTML = `<div class="live" style="animation:none;background:transparent;box-shadow:none;color:var(--label)">SEASON COMPLETE</div>`;
+    return;
+  }
+
+  const list = FIXTURES.slice(idx + 1, idx + 1 + UPCOMING_COUNT);
+  const key = cur.kickoffUTC + '|' + list.map(f => f.kickoffUTC).join(',');
+
+  if (key !== currentKey){
+    currentKey = key;
+    setFlag($homeFlag, cur.hc);
+    setFlag($awayFlag, cur.ac);
+    $homeName.textContent = cur.home;
+    $awayName.textContent = cur.away;
+
+    if (list.length){
+      $upcoming.innerHTML =
+        `<div class="up-eyebrow">UPCOMING</div>` +
+        list.map((f, n) => rowHTML(f, n === 0 ? 'lead' : 'dim')).join('');
+      $upcoming.querySelectorAll('[data-flag]').forEach(el => setFlag(el, el.dataset.flag));
+    } else {
+      $upcoming.innerHTML = `<div class="up-eyebrow">UPCOMING</div><div class="up-row dim"><span class="nm">— end of fixtures —</span></div>`;
+    }
+  }
+
+  // centre: LIVE once kickoff passes, otherwise the Stockholm kickoff date + time
+  if (kickoff - nowMs <= 0){
+    $centre.innerHTML = `<div class="live">LIVE NOW</div>`;
+  } else {
+    $centre.innerHTML =
+      `<div class="when">` +
+        `<div class="when-date">${matchDate(cur.kickoffUTC)}</div>` +
+        `<div class="when-time">${matchTime(cur.kickoffUTC)}</div>` +
+        `<div class="when-lbl">KICKOFF · ${shortTZName(new Date(cur.kickoffUTC), MATCH_TZ)}</div>` +
+      `</div>`;
+  }
+}
+
+/* ---- tick ---- */
+function tick(){ const now = new Date(); renderClock(now); renderMatches(now); }
+tick();
+setInterval(tick, 1000);
+
+/* ---- fullscreen: F or double-click ---- */
+function toggleFullscreen(){
+  if (!document.fullscreenElement) document.documentElement.requestFullscreen?.();
+  else document.exitFullscreen?.();
+}
+document.addEventListener('keydown', e => { if (e.key === 'f' || e.key === 'F') toggleFullscreen(); });
+document.addEventListener('dblclick', toggleFullscreen);
+</script>
+</body>
+</html>
