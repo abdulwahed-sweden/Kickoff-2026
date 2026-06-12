@@ -91,7 +91,12 @@
     box-shadow:0 0 0 1px rgba(255,255,255,.18), 0 8px 20px rgba(0,0,0,.5);
   }
   .flag-lg img{display:block;width:100%;height:100%;object-fit:cover}
-  .flag-lg svg{display:block;width:100%;height:100%}
+  /* fallback tile shown only if a flag image fails to load */
+  .flag-fallback{
+    width:100%;height:100%;display:flex;align-items:center;justify-content:center;
+    background:#2A2A2E;color:#9A968B;font-weight:700;letter-spacing:.04em;
+    font-size:clamp(8px,1.1vw,14px);
+  }
   .team-lg{font-size:clamp(14px,1.7vw,24px);font-weight:700;color:var(--text);text-align:center}
   #centre{display:flex;align-items:center;justify-content:center;min-width:clamp(140px,20vw,300px)}
   .when{display:flex;flex-direction:column;align-items:center;gap:clamp(3px,.6vh,7px)}
@@ -123,7 +128,6 @@
   .up-teams{display:flex;align-items:center;gap:clamp(8px,1.3vw,13px);min-width:0}
   .fg{aspect-ratio:3/2;border-radius:3px;overflow:hidden;flex:none}
   .fg img{display:block;width:100%;height:100%;object-fit:cover}
-  .fg svg{display:block;width:100%;height:100%}
   .nm{white-space:nowrap}
   .up-vs{color:var(--punct);font-weight:600;font-size:.82em}
   .up-when{font-weight:700;letter-spacing:.04em;white-space:nowrap}
@@ -216,55 +220,32 @@ const ISO = {
   ARG:'ar', ALG:'dz', AUT:'at', JOR:'jo',
 };
 
-/* Offline fallback — simplified inline-SVG flags shown only if the real image fails to load. */
-const FLAGS = {
-  QAT:'<rect width="84" height="58" fill="#8A1538"/><rect width="26" height="58" fill="#fff"/>',
-  SUI:'<rect width="84" height="58" fill="#D52B1E"/><rect x="36" y="13" width="12" height="32" fill="#fff"/><rect x="26" y="23" width="32" height="12" fill="#fff"/>',
-  BRA:'<rect width="84" height="58" fill="#009739"/><polygon points="42,7 78,29 42,51 6,29" fill="#FEDD00"/><circle cx="42" cy="29" r="12" fill="#012169"/>',
-  MAR:'<rect width="84" height="58" fill="#C1272D"/><path d="M42 18 l3.2 10 10.5 0 -8.5 6.2 3.2 10 -8.5-6.2 -8.5 6.2 3.2-10 -8.5-6.2 10.5 0 z" fill="none" stroke="#006233" stroke-width="1.8"/>',
-  HAI:'<rect width="84" height="29" fill="#00209F"/><rect y="29" width="84" height="29" fill="#D21034"/>',
-  SCO:'<rect width="84" height="58" fill="#0065BF"/><path d="M0 0 L84 58 M84 0 L0 58" stroke="#fff" stroke-width="9"/>',
-  AUS:'<rect width="84" height="58" fill="#00247D"/><path d="M0 0 L42 29 M42 0 L0 29" stroke="#fff" stroke-width="2"/><path d="M21 0 V29 M0 14.5 H42" stroke="#fff" stroke-width="3.5"/><path d="M21 0 V29 M0 14.5 H42" stroke="#E4002B" stroke-width="1.6"/><circle cx="63" cy="40" r="3.2" fill="#fff"/><circle cx="63" cy="17" r="2.2" fill="#fff"/>',
-  TUR:'<rect width="84" height="58" fill="#E30A17"/><circle cx="33" cy="29" r="13" fill="#fff"/><circle cx="38" cy="29" r="10.5" fill="#E30A17"/><polygon points="53,29 47.4,30.8 50.9,26 50.9,32 47.4,27.2" fill="#fff"/>',
-  GER:'<rect width="84" height="58" fill="#000"/><rect y="19.3" width="84" height="19.3" fill="#DD0000"/><rect y="38.6" width="84" height="19.4" fill="#FFCE00"/>',
-  CUW:'<rect width="84" height="58" fill="#002B7F"/><rect y="40" width="84" height="8" fill="#F9E814"/><polygon points="18,17 20,23.5 26.5,23.5 21.2,27.5 23.2,34 18,30 12.8,34 14.8,27.5 9.5,23.5 16,23.5" fill="#fff"/><polygon points="30,26 31.4,30 35.5,30 32.2,32.5 33.5,36.5 30,34 26.5,36.5 27.8,32.5 24.5,30 28.6,30" fill="#fff"/>',
-  NED:'<rect width="84" height="58" fill="#21468B"/><rect width="84" height="38.6" fill="#fff"/><rect width="84" height="19.3" fill="#AE1C28"/>',
-  JPN:'<rect width="84" height="58" fill="#fff"/><circle cx="42" cy="29" r="15" fill="#BC002D"/>',
-  SWE:'<rect width="84" height="58" fill="#006AA7"/><rect x="24" width="11" height="58" fill="#FECC00"/><rect y="23.5" width="84" height="11" fill="#FECC00"/>',
-  TUN:'<rect width="84" height="58" fill="#E70013"/><circle cx="42" cy="29" r="15" fill="#fff"/><circle cx="44" cy="29" r="10" fill="#E70013"/><circle cx="48" cy="29" r="8.5" fill="#fff"/><polygon points="50,29 46.6,30.1 48.7,27.2 48.7,30.8 46.6,27.9" fill="#E70013"/>',
-  ESP:'<rect width="84" height="58" fill="#AA151B"/><rect y="14.5" width="84" height="29" fill="#F1BF00"/>',
-  CPV:'<rect width="84" height="58" fill="#003893"/><rect y="32" width="84" height="6" fill="#fff"/><rect y="38" width="84" height="4" fill="#CF2027"/><rect y="42" width="84" height="6" fill="#fff"/>',
-  CAN:'<rect width="84" height="58" fill="#fff"/><rect width="21" height="58" fill="#D52B1E"/><rect x="63" width="21" height="58" fill="#D52B1E"/><polygon points="42,17 45,27 53,27 46,32 49,42 42,35 35,42 38,32 31,27 39,27" fill="#D52B1E"/>',
-  BIH:'<rect width="84" height="58" fill="#002395"/><polygon points="28,4 70,4 70,54" fill="#FECB00"/>',
-  USA:'<rect width="84" height="58" fill="#fff"/><g fill="#B22234"><rect width="84" height="4.5"/><rect y="9" width="84" height="4.5"/><rect y="18" width="84" height="4.5"/><rect y="27" width="84" height="4.5"/><rect y="36" width="84" height="4.5"/><rect y="45" width="84" height="4.5"/><rect y="53.5" width="84" height="4.5"/></g><rect width="36" height="31" fill="#3C3B6E"/>',
-  PAR:'<rect width="84" height="58" fill="#fff"/><rect width="84" height="19.3" fill="#D52B1E"/><rect y="38.6" width="84" height="19.4" fill="#0038A8"/>',
-  CIV:'<rect width="84" height="58" fill="#fff"/><rect width="28" height="58" fill="#F77F00"/><rect x="56" width="28" height="58" fill="#009E60"/>',
-  ECU:'<rect width="84" height="58" fill="#FFD100"/><rect y="29" width="84" height="14.5" fill="#0072CE"/><rect y="43.5" width="84" height="14.5" fill="#EF3340"/>',
-  BEL:'<rect width="84" height="58" fill="#000"/><rect x="28" width="28" height="58" fill="#FAE042"/><rect x="56" width="28" height="58" fill="#ED2939"/>',
-  EGY:'<rect width="84" height="58" fill="#fff"/><rect width="84" height="19.3" fill="#CE1126"/><rect y="38.6" width="84" height="19.4" fill="#000"/>',
-  KSA:'<rect width="84" height="58" fill="#006C35"/><rect x="14" y="33" width="56" height="3.4" fill="#fff"/>',
-  URU:'<rect width="84" height="58" fill="#fff"/><g fill="#0038A8"><rect y="6.4" width="84" height="6.4"/><rect y="19.2" width="84" height="6.4"/><rect y="32" width="84" height="6.4"/><rect y="44.8" width="84" height="6.4"/></g><rect width="33" height="32" fill="#fff"/><circle cx="16.5" cy="16" r="7" fill="#FCD116"/>',
-  IRN:'<rect width="84" height="58" fill="#fff"/><rect width="84" height="19.3" fill="#239F40"/><rect y="38.6" width="84" height="19.4" fill="#DA0000"/>',
-  NZL:'<rect width="84" height="58" fill="#00247D"/><path d="M0 0 L42 29 M42 0 L0 29" stroke="#fff" stroke-width="2"/><path d="M21 0 V29 M0 14.5 H42" stroke="#fff" stroke-width="3.5"/><path d="M21 0 V29 M0 14.5 H42" stroke="#CC142B" stroke-width="1.6"/><circle cx="64" cy="16" r="2.4" fill="#CC142B"/><circle cx="58" cy="38" r="2.4" fill="#CC142B"/><circle cx="70" cy="42" r="2.4" fill="#CC142B"/>',
-  FRA:'<rect width="84" height="58" fill="#fff"/><rect width="28" height="58" fill="#002395"/><rect x="56" width="28" height="58" fill="#ED2939"/>',
-  SEN:'<rect width="84" height="58" fill="#FDEF42"/><rect width="28" height="58" fill="#00853F"/><rect x="56" width="28" height="58" fill="#E31B23"/><polygon points="42,22 44,28 50,28 45,32 47,38 42,34 37,38 39,32 34,28 40,28" fill="#00853F"/>',
-  IRQ:'<rect width="84" height="58" fill="#fff"/><rect width="84" height="19.3" fill="#CE1126"/><rect y="38.6" width="84" height="19.4" fill="#000"/>',
-  NOR:'<rect width="84" height="58" fill="#BA0C2F"/><rect x="24" width="14" height="58" fill="#fff"/><rect y="22" width="84" height="14" fill="#fff"/><rect x="27.5" width="7" height="58" fill="#00205B"/><rect y="25.5" width="84" height="7" fill="#00205B"/>',
-  ARG:'<rect width="84" height="58" fill="#fff"/><rect width="84" height="19.3" fill="#74ACDF"/><rect y="38.6" width="84" height="19.4" fill="#74ACDF"/><circle cx="42" cy="29" r="5" fill="#FCBF49"/>',
-  ALG:'<rect width="84" height="58" fill="#fff"/><rect width="42" height="58" fill="#006233"/><circle cx="46" cy="29" r="11" fill="#D21034"/><circle cx="50" cy="29" r="9" fill="#fff"/><polygon points="55,29 49.5,30.8 53,26 53,32 49.5,27.2" fill="#D21034"/>',
-  AUT:'<rect width="84" height="58" fill="#ED2939"/><rect y="19.3" width="84" height="19.3" fill="#fff"/>',
-  JOR:'<rect width="84" height="58" fill="#fff"/><rect width="84" height="19.3" fill="#000"/><rect y="38.6" width="84" height="19.4" fill="#007A3D"/><polygon points="0,0 34,29 0,58" fill="#CE1126"/>',
-};
-
+/* Flags — one code path: real raster PNGs from flagcdn, keyed by the ISO map above.
+   Raster PNGs carry intrinsic dimensions, so they render reliably everywhere
+   (including Monterey's WKWebView screensaver, where remote SVG-in-<img> collapsed
+   to blank/garbled boxes). A 2x srcset keeps them crisp on the 27" iMac. No emoji,
+   no inline placeholders. If the CDN is unreachable we draw a neutral lettered tile —
+   never a blank box and never the wrong flag.
+   To self-host later: swap the two flagcdn URLs for `flags/<iso>.png`, same helper. */
 function setFlag(el, code){
   el.innerHTML = '';
+  const iso = ISO[code];
+  if (!iso){ el.appendChild(neutralTile(code)); return; }
   const img = document.createElement('img');
-  img.alt = ''; img.decoding = 'async';
+  img.alt = ''; img.decoding = 'async'; img.loading = 'eager';
+  img.src    = `https://flagcdn.com/h120/${iso}.png`;
+  img.srcset = `https://flagcdn.com/h240/${iso}.png 2x`;
   img.addEventListener('error', () => {
-    el.innerHTML = `<svg viewBox="0 0 84 58" preserveAspectRatio="none">${FLAGS[code] || ''}</svg>`;
+    el.innerHTML = ''; el.appendChild(neutralTile(code));
   }, { once:true });
-  img.src = `https://flagcdn.com/${ISO[code] || 'xx'}.svg`;
   el.appendChild(img);
+}
+/* graceful fallback tile: ISO/team letters on neutral ink — fills the flag frame */
+function neutralTile(code){
+  const d = document.createElement('div');
+  d.className = 'flag-fallback';
+  d.textContent = (code || '?').slice(0,3).toUpperCase();
+  return d;
 }
 
 /* ---- timezone / locale helpers ---- */
