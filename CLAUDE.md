@@ -5,76 +5,112 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## What this project is
 
 A single self-contained HTML file — the **Kickoff Ambient Clock**: a calm, dark
-"luxe" ambient screen for a 27" iMac shown fullscreen across a room. It displays
-a large amber 12-hour clock plus a countdown to the next World Cup 2026 match
-(with full country names and flags) and a smaller "NEXT" match below it.
+"luxe" ambient screen for a 27" iMac shown fullscreen across a room, also
+installed as the machine's **macOS screensaver**. It shows a large amber
+**12-hour clock (AM/PM)** plus the next **World Cup 2026** match with its
+**Stockholm kickoff date & time (24h)**, and a tiered **UPCOMING** list of the
+matches after it (the immediate next in colour, the rest smaller and grayscale).
 
-No build step, no dependencies, no package manager. The deliverable runs by
-double-clicking the HTML file in a browser. Fonts load from Google Fonts
-(Archivo) but must degrade to `system-ui` if offline.
+No build step, no dependencies, no package manager. It runs by double-clicking
+the HTML file. Fonts load from Google Fonts (**Inter**) but degrade to
+`system-ui` offline.
 
-## Commands
+## The file
 
-There is no build/lint/test tooling. To work on it:
+- **`kickoff-clock.html`** — the whole app (inline CSS + JS). **Edit this** for
+  any change.
+- **`README.md`** — the original build brief. Useful for intent and the design
+  values, but the app has since evolved past it: the centre shows the **match
+  date/time**, not a MIN:SEC countdown; the clock is **Inter**, not Archivo; the
+  bottom is a **tiered upcoming list**, not a single "NEXT" pill; flags are
+  **real raster PNGs**, not inline-SVG placeholders. When README and the code
+  disagree, the code is current.
+- **`GUIDE.md`** — a very-simple-English user guide (with `screenshot.png`).
+
+There is no longer a separate static mockup file.
+
+### Config block (top of the `<script>`)
+`CLOCK_TYPE` (`'12h'`/`'24h'`), `SHOW_SECONDS`, `LIVE_WINDOW_MIN` (how long a
+kicked-off match stays as `LIVE NOW`), `MATCH_TZ` (`'Europe/Stockholm'` — match
+times always render here, independent of the clock), `UPCOMING_COUNT`. The clock
+colour is the CSS var `--clock`.
+
+`FIXTURES` holds the real WC2026 group-stage matches with kickoff in **UTC**;
+times are converted to `MATCH_TZ` at render. Each fixture carries a 3-letter
+`hc`/`ac` code mapped to an ISO-2 code in the `ISO` table for flags.
+
+## Commands / verifying
+
+No build/lint/test tooling.
 
 ```bash
-open kickoff-clock.html                 # macOS: open the live app in the browser
+open kickoff-clock.html        # open the live app in the default browser
 ```
 
-Iterate by editing the file and reloading the browser. Verify against the
-**ACCEPTANCE CHECKLIST** at the bottom of `README.md` before finishing any change.
-To sanity-check the pure JS logic (fixture rollover, countdown math) without a
-browser, extract the `<script>` body and exercise it under `node -e` — see how it
-was done when the dynamic version was built.
+- **Logic check without a browser:** extract the `<script>` body and run it under
+  `node -e` / a `.cjs` file (used throughout history to verify fixture rollover,
+  ISO coverage, TZ conversion). `Date`/`Intl` work in Node.
+- **Pixel-perfect screenshot:** headless Chrome —
+  `"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless=new
+  --window-size=1600,900 --force-device-scale-factor=2 --virtual-time-budget=6000
+  --screenshot=screenshot.png "file://$PWD/kickoff-clock.html"`.
+  ⚠️ A Chrome screenshot is **not** a faithful test of the screensaver — see below.
 
-## The two files — read this first
+## Flags — and the WKWebView gotcha (important)
 
-`README.md` is the authoritative **build brief**: it specifies the fully dynamic
-single-file app. The repo contains two HTML files:
+Flags are **real raster PNGs** from flagcdn, one code path in `setFlag()`:
+`https://flagcdn.com/h120/<iso>.png` with an `h240 ... 2x` srcset. On load error it
+draws a neutral lettered tile (`.flag-fallback`) — never a blank box or wrong flag.
 
-- **`kickoff-clock.html`** — the **working dynamic app** (the README deliverable).
-  Live clock, auto-detected timezone, the `FIXTURES` array that the countdown
-  auto-advances through, `LIVE NOW` badge, F/double-click fullscreen, the
-  `CLOCK_TYPE` / `SHOW_SECONDS` / `LIVE_WINDOW_MIN` config block, and a 16-entry
-  `FLAGS` inline-SVG map. **This is the file to edit for behavior changes.**
-- **`kickoff_dark_spacious_clear.html`** — the original **static visual mockup**
-  (inline-styled markup, hardcoded `5:47 PM` / `12:48` / `Brazil`–`Morocco`, no
-  JavaScript). Kept as the design reference that proved out spacing, color, and
-  typography. The dynamic app reuses its design tokens and flag SVGs.
+**Do not reintroduce remote SVG flags.** Monterey's **WKWebView** (the engine the
+screensaver runs in) renders a remote **SVG inside `<img>` as a blank/garbled
+box** — even though Chrome renders it perfectly. This is why an earlier
+flagcdn-`.svg` version looked flawless in a headless-Chrome screenshot but showed
+blank/wrong flags in the actual screensaver. Raster PNGs carry intrinsic
+dimensions and render identically everywhere. Likewise avoid OS emoji flags (🇨🇦)
+— they differ per OS. Scotland is `gb-sct` (flagcdn also supports `gb-eng`,
+`gb-wls`).
 
-The flag SVGs in `kickoff-clock.html` are simplified placeholders. A few
-(Australia, Türkiye, Tunisia, Cape Verde) are rough approximations meant to be
-swapped for real images via the documented `<img src="flags/xxx.png">` path in
-the `FLAGS` map comment.
+**Always verify flag/layout changes in the real screensaver, not just a browser.**
 
-## Design constraints that are the whole point (from README)
+## Deployed as the macOS screensaver
 
-These were explicit corrections to a previous cramped/faint version — do not
-regress them:
+Installed via **WebViewScreenSaver** (`~/Library/Screen Savers/WebViewScreenSaver.saver`),
+which points at a **copy of the page baked into the saver bundle**:
+`~/Library/Screen Savers/WebViewScreenSaver.saver/Contents/Resources/kickoff-clock.html`
+(a bundle path is the only location the sandboxed engine can reliably read).
 
-- **Generous spacing.** ~7–9% of viewport height between the four zones (clock /
-  place line / first match / next match). When unsure, add more air.
-- **Nothing faint, tiny, or half-hidden.** Min weight 500 (labels 600); no
-  opacity below ~0.7 on meaningful text. `#9A968B` is the dimmest a *meaningful*
-  label may go; only punctuation (the `:` and `vs`, color `#5A564C`) goes dimmer.
-- **Full country names always** on BOTH matches (`Brazil`, not `BRA`). Trigrams
-  are used only as internal keys (`hc`/`ac`, FLAGS map), never rendered.
-- All English; first match prominent, second match smaller but clearly legible.
+- **After editing `kickoff-clock.html`, you MUST re-sync the copy** or the
+  screensaver shows the old version:
+  `cp kickoff-clock.html "$HOME/Library/Screen Savers/WebViewScreenSaver.saver/Contents/Resources/kickoff-clock.html"`
+- The saver reads its URL from per-host prefs in the **sandboxed
+  `legacyScreenSaver` container** (domain `WebViewScreenSaver`, key
+  `kScreenSaverURLList` → `kScreenSaverURL`/`kScreenSaverTime`) — writing the
+  plain `defaults -currentHost` domain alone is **not** read by the sandboxed
+  engine. Default module + idle time live in `com.apple.screensaver`
+  (`-currentHost`), currently 120s.
+- **Preview:** `/System/Library/CoreServices/ScreenSaverEngine.app/Contents/MacOS/ScreenSaverEngine`
+  (move the mouse to exit). `killall cfprefsd` after pref changes.
 
-Color system: clock amber `#FFB23E` with glow; accent vermilion `#FF6A3D` (used
-only for the seconds digits and the "OFF" in the KICKOFF wordmark); text
-`#EDEAE0` / `#D8D4C8` / labels `#9A968B`. Background is the radial gradient in
-the README. Expose the clock color as a CSS var `--clock`.
+## Design constraints (do not regress)
+
+- **Generous, even vertical spacing** between the zones (clock+place / match /
+  upcoming). Erring toward more air was an explicit, repeated request.
+- **Nothing faint, tiny, or half-hidden.** `--label` (`#A7A296`) is the dimmest a
+  *meaningful* label goes; only punctuation (`vs`, `--punct`) goes dimmer.
+- **Full country names always** (`Brazil`, never `BRA`). Trigrams are internal
+  keys only.
+- **All English.** Clock is the hero; the prominent match in full colour, the
+  upcoming rows progressively smaller and de-saturated ("fewer colours" toward
+  the bottom).
+- Colours: clock amber `--clock` `#FFB23E` (glow); vermilion `--accent` `#FF6A3D`
+  (the prominent match time + the "OFF" in the wordmark). Timezone label shows
+  **CET/CEST** via `tzAbbr()` (the browser's `GMT+2` is mapped from the offset).
 
 ## Conventions
 
-- **Single file, inline everything.** Keep CSS and JS inline in the one HTML
-  file; do not introduce external assets, a build step, or dependencies.
-- All fixture times are stored in **UTC** and converted to the viewer's local
-  time at render — never hardcode local times.
-- Flags are inline SVG placeholders keyed by trigram; leave a comment showing
-  how to swap one for `<img src="flags/xxx.png">` later.
-- Respect `prefers-reduced-motion`; keep motion to the 1s tick and an optional
-  LIVE-badge pulse.
-- Layout must scale cleanly from a laptop up to a 27" iMac (the mockup uses
-  `clamp()` and `vw` units throughout — follow that pattern).
+- **Single file, inline everything.** No build step, no external assets except the
+  flag CDN (with the lettered-tile fallback) and the Google-Fonts `@import`.
+- Fixture times stored in **UTC**, rendered in `MATCH_TZ`; never hardcode local times.
+- Respect `prefers-reduced-motion` (kills the LIVE pulse).
+- Layout scales laptop → 27" iMac via `clamp()` + `vw`/`vh` units — follow that pattern.
