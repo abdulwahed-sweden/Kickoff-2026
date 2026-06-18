@@ -73,6 +73,23 @@ dimensions and render identically everywhere. Likewise avoid OS emoji flags (ðŸ‡
 
 **Always verify flag/layout changes in the real screensaver, not just a browser.**
 
+**Verified 2026-06-18 (Chrome kiosk fullscreen):** all **48** flagcdn
+`h120/<iso>.png` URLs the app references return HTTP `200`, and every flag renders
+correctly â€” prominent match in full colour, dim UPCOMING rows correctly grayscaled,
+**no fallback tiles, no blank/wrong flags.** The WKWebView gotcha above is
+**screensaver-engine-specific**: when run as a Chrome kiosk (see
+`run-fullscreen.command`) a headless-Chrome screenshot *is* a faithful test, since
+the kiosk and headless use the same Chromium engine and the raster PNGs load
+reliably. Re-run the URL check any time with:
+
+```bash
+grep -oE "[A-Z]{3}:'[a-z-]+'" kickoff-clock.html | grep -oE "'[a-z-]+'" | tr -d "'" \
+  | sort -u | while IFS= read -r iso; do
+      printf '%s %s\n' "$iso" \
+        "$(curl -s --max-time 8 -o /dev/null -w '%{http_code}' "https://flagcdn.com/h120/$iso.png")"
+    done
+```
+
 ## Deployed as the macOS screensaver
 
 Installed via **WebViewScreenSaver** (`~/Library/Screen Savers/WebViewScreenSaver.saver`),
