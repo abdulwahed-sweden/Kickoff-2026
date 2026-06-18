@@ -1,0 +1,31 @@
+{
+  // ── Kickoff Ambient Clock — project settings ──────────────────────────
+  // A single, hand-tuned self-contained HTML file (inline CSS + JS).
+  // We intentionally DISABLE format-on-save here (overriding the global
+  // setting) so Prettier doesn't reflow the carefully spaced markup —
+  // see the design constraints in CLAUDE.md. Format manually with
+  // Shift+Option+F only when you actually want to.
+  "editor.formatOnSave": false,
+
+  // The whole app lives in this one file; treat it as HTML.
+  "files.associations": {
+    "kickoff-clock.html": "html"
+  },
+
+  // Live Server: the easiest way to preview the clock in a real browser.
+  // (Remember: a browser is NOT a faithful test of the WKWebView
+  // screensaver — verify flag/layout changes in the real screensaver.)
+  "liveServer.settings.donotShowInfoMsg": true,
+  "liveServer.settings.donotVerifyTags": true,
+
+  // Keep the large screenshot and any backups out of search / quick-open.
+  "search.exclude": {
+    "screenshot.png": true,
+    "**/*.bak.*": true
+  },
+
+  // Soft-wrap the Markdown docs (README / GUIDE / CLAUDE).
+  "[markdown]": {
+    "editor.wordWrap": "on"
+  }
+}

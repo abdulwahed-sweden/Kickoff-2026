@@ -4,9 +4,19 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Kickoff — Ambient Clock</title>
+
+<!-- Inter loads NON-BLOCKING. The page must paint instantly with system-ui even with
+     zero network — essential inside the sandboxed screensaver WebView, where a
+     render-blocking @import can stall WKWebView and leave a black screen. The font
+     swaps in only if/when it arrives; offline it simply stays system-ui. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" media="print" onload="this.media='all'"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap">
+
 <style>
-  /* Inter — chosen for maximum legibility across a room; degrades to system-ui offline. */
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+  /* Inter — chosen for maximum legibility across a room; degrades to system-ui offline.
+     (Loaded via the non-blocking <link> above — never via a render-blocking @import.) */
 
   :root{
     --clock:#FFB23E;          /* clock amber */
@@ -454,8 +464,18 @@ function renderMatches(now){
   }
 }
 
-/* ---- tick ---- */
-function tick(){ const now = new Date(); renderClock(now); renderMatches(now); }
+/* ---- tick ----
+   Wrapped so a single bad render can NEVER freeze the display: if any one tick
+   throws, we swallow it and the next tick (and the clock) keeps running. */
+function tick(){
+  try {
+    const now = new Date();
+    renderClock(now);
+    renderMatches(now);
+  } catch (err) {
+    if (window.console) console.error('tick failed (continuing):', err);
+  }
+}
 tick();
 setInterval(tick, 1000);
 

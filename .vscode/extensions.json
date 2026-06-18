@@ -1,0 +1,9 @@
+{
+  // Extensions that make working on the Kickoff Ambient Clock pleasant.
+  // VS Code will offer to install any of these that are missing.
+  "recommendations": [
+    "ritwickdey.liveserver",
+    "esbenp.prettier-vscode",
+    "davidanson.vscode-markdownlint"
+  ]
+}
