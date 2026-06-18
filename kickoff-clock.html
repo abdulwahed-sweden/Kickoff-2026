@@ -182,33 +182,87 @@ const MATCH_TZ        = 'Europe/Stockholm'; // all match dates/times shown in th
 const UPCOMING_COUNT  = 4;     // matches listed below the prominent one (1 lead + the rest dimmed)
 /* =============================================================== */
 
-/* Real WC2026 group-stage fixtures (FIFA World Cup, USA/Canada/Mexico).
-   Kickoff stored in UTC; source times are US Eastern (June = EDT = UTC-4),
-   cross-checked against ESPN's schedule. Verify against FIFA.com near kickoff. */
+/* Real WC2026 group-stage fixtures — all 72 matches (FIFA World Cup, USA/Canada/Mexico).
+   Kickoff stored in UTC; source times are US Eastern (June = EDT = UTC-4), cross-checked
+   across ESPN and worldcuppass (matchups + times agree). Listed chronologically by kickoff.
+   Verify against FIFA.com near kickoff. Knockout bracket (from 28 Jun) is added once the
+   group standings are known — until then the screen shows a "group stage complete" rest state. */
 const FIXTURES = [
-  // Fri 12 Jun
+  // ── Matchday 1 (11–17 Jun) ──
+  { home:'Mexico',        away:'South Africa',         hc:'MEX', ac:'RSA', kickoffUTC:'2026-06-11T19:00:00Z' },
+  { home:'South Korea',   away:'Czechia',              hc:'KOR', ac:'CZE', kickoffUTC:'2026-06-12T02:00:00Z' },
   { home:'Canada',        away:'Bosnia & Herzegovina', hc:'CAN', ac:'BIH', kickoffUTC:'2026-06-12T19:00:00Z' },
   { home:'United States', away:'Paraguay',             hc:'USA', ac:'PAR', kickoffUTC:'2026-06-13T01:00:00Z' },
-  // Sat 13 Jun
   { home:'Qatar',         away:'Switzerland',          hc:'QAT', ac:'SUI', kickoffUTC:'2026-06-13T19:00:00Z' },
   { home:'Brazil',        away:'Morocco',              hc:'BRA', ac:'MAR', kickoffUTC:'2026-06-13T22:00:00Z' },
   { home:'Haiti',         away:'Scotland',             hc:'HAI', ac:'SCO', kickoffUTC:'2026-06-14T01:00:00Z' },
   { home:'Australia',     away:'Türkiye',              hc:'AUS', ac:'TUR', kickoffUTC:'2026-06-14T04:00:00Z' },
-  // Sun 14 Jun
   { home:'Germany',       away:'Curaçao',              hc:'GER', ac:'CUW', kickoffUTC:'2026-06-14T17:00:00Z' },
   { home:'Netherlands',   away:'Japan',                hc:'NED', ac:'JPN', kickoffUTC:'2026-06-14T20:00:00Z' },
   { home:'Ivory Coast',   away:'Ecuador',              hc:'CIV', ac:'ECU', kickoffUTC:'2026-06-14T23:00:00Z' },
   { home:'Sweden',        away:'Tunisia',              hc:'SWE', ac:'TUN', kickoffUTC:'2026-06-15T02:00:00Z' },
-  // Mon 15 Jun
   { home:'Spain',         away:'Cape Verde',           hc:'ESP', ac:'CPV', kickoffUTC:'2026-06-15T16:00:00Z' },
-  { home:'Belgium',       away:'Egypt',                hc:'BEL', ac:'EGY', kickoffUTC:'2026-06-15T22:00:00Z' },
+  { home:'Belgium',       away:'Egypt',                hc:'BEL', ac:'EGY', kickoffUTC:'2026-06-15T19:00:00Z' },
   { home:'Saudi Arabia',  away:'Uruguay',              hc:'KSA', ac:'URU', kickoffUTC:'2026-06-15T22:00:00Z' },
-  { home:'Iran',          away:'New Zealand',          hc:'IRN', ac:'NZL', kickoffUTC:'2026-06-16T04:00:00Z' },
-  // Tue 16 Jun
+  { home:'Iran',          away:'New Zealand',          hc:'IRN', ac:'NZL', kickoffUTC:'2026-06-16T01:00:00Z' },
   { home:'France',        away:'Senegal',              hc:'FRA', ac:'SEN', kickoffUTC:'2026-06-16T19:00:00Z' },
   { home:'Iraq',          away:'Norway',               hc:'IRQ', ac:'NOR', kickoffUTC:'2026-06-16T22:00:00Z' },
   { home:'Argentina',     away:'Algeria',              hc:'ARG', ac:'ALG', kickoffUTC:'2026-06-17T01:00:00Z' },
   { home:'Austria',       away:'Jordan',               hc:'AUT', ac:'JOR', kickoffUTC:'2026-06-17T04:00:00Z' },
+  { home:'Portugal',      away:'DR Congo',             hc:'POR', ac:'COD', kickoffUTC:'2026-06-17T17:00:00Z' },
+  { home:'England',       away:'Croatia',              hc:'ENG', ac:'CRO', kickoffUTC:'2026-06-17T20:00:00Z' },
+  { home:'Ghana',         away:'Panama',               hc:'GHA', ac:'PAN', kickoffUTC:'2026-06-17T23:00:00Z' },
+  { home:'Uzbekistan',    away:'Colombia',             hc:'UZB', ac:'COL', kickoffUTC:'2026-06-18T02:00:00Z' },
+  // ── Matchday 2 (18–23 Jun) ──
+  { home:'Czechia',       away:'South Africa',         hc:'CZE', ac:'RSA', kickoffUTC:'2026-06-18T16:00:00Z' },
+  { home:'Switzerland',   away:'Bosnia & Herzegovina', hc:'SUI', ac:'BIH', kickoffUTC:'2026-06-18T19:00:00Z' },
+  { home:'Canada',        away:'Qatar',                hc:'CAN', ac:'QAT', kickoffUTC:'2026-06-18T22:00:00Z' },
+  { home:'Mexico',        away:'South Korea',          hc:'MEX', ac:'KOR', kickoffUTC:'2026-06-19T03:00:00Z' },
+  { home:'United States', away:'Australia',            hc:'USA', ac:'AUS', kickoffUTC:'2026-06-19T19:00:00Z' },
+  { home:'Scotland',      away:'Morocco',              hc:'SCO', ac:'MAR', kickoffUTC:'2026-06-19T22:00:00Z' },
+  { home:'Brazil',        away:'Haiti',                hc:'BRA', ac:'HAI', kickoffUTC:'2026-06-20T00:30:00Z' },
+  { home:'Türkiye',       away:'Paraguay',             hc:'TUR', ac:'PAR', kickoffUTC:'2026-06-20T04:00:00Z' },
+  { home:'Netherlands',   away:'Sweden',               hc:'NED', ac:'SWE', kickoffUTC:'2026-06-20T17:00:00Z' },
+  { home:'Germany',       away:'Ivory Coast',          hc:'GER', ac:'CIV', kickoffUTC:'2026-06-20T20:00:00Z' },
+  { home:'Ecuador',       away:'Curaçao',              hc:'ECU', ac:'CUW', kickoffUTC:'2026-06-21T00:00:00Z' },
+  { home:'Tunisia',       away:'Japan',                hc:'TUN', ac:'JPN', kickoffUTC:'2026-06-21T04:00:00Z' },
+  { home:'Spain',         away:'Saudi Arabia',         hc:'ESP', ac:'KSA', kickoffUTC:'2026-06-21T16:00:00Z' },
+  { home:'Belgium',       away:'Iran',                 hc:'BEL', ac:'IRN', kickoffUTC:'2026-06-21T19:00:00Z' },
+  { home:'Uruguay',       away:'Cape Verde',           hc:'URU', ac:'CPV', kickoffUTC:'2026-06-21T22:00:00Z' },
+  { home:'New Zealand',   away:'Egypt',                hc:'NZL', ac:'EGY', kickoffUTC:'2026-06-22T01:00:00Z' },
+  { home:'Argentina',     away:'Austria',              hc:'ARG', ac:'AUT', kickoffUTC:'2026-06-22T17:00:00Z' },
+  { home:'France',        away:'Iraq',                 hc:'FRA', ac:'IRQ', kickoffUTC:'2026-06-22T21:00:00Z' },
+  { home:'Norway',        away:'Senegal',              hc:'NOR', ac:'SEN', kickoffUTC:'2026-06-23T00:00:00Z' },
+  { home:'Jordan',        away:'Algeria',              hc:'JOR', ac:'ALG', kickoffUTC:'2026-06-23T03:00:00Z' },
+  { home:'Portugal',      away:'Uzbekistan',           hc:'POR', ac:'UZB', kickoffUTC:'2026-06-23T17:00:00Z' },
+  { home:'England',       away:'Ghana',                hc:'ENG', ac:'GHA', kickoffUTC:'2026-06-23T20:00:00Z' },
+  { home:'Panama',        away:'Croatia',              hc:'PAN', ac:'CRO', kickoffUTC:'2026-06-23T23:00:00Z' },
+  { home:'Colombia',      away:'DR Congo',             hc:'COL', ac:'COD', kickoffUTC:'2026-06-24T02:00:00Z' },
+  // ── Matchday 3 (24–27 Jun) ──
+  { home:'Switzerland',   away:'Canada',               hc:'SUI', ac:'CAN', kickoffUTC:'2026-06-24T19:00:00Z' },
+  { home:'Bosnia & Herzegovina', away:'Qatar',         hc:'BIH', ac:'QAT', kickoffUTC:'2026-06-24T19:00:00Z' },
+  { home:'Scotland',      away:'Brazil',               hc:'SCO', ac:'BRA', kickoffUTC:'2026-06-24T22:00:00Z' },
+  { home:'Morocco',       away:'Haiti',                hc:'MAR', ac:'HAI', kickoffUTC:'2026-06-24T22:00:00Z' },
+  { home:'Czechia',       away:'Mexico',               hc:'CZE', ac:'MEX', kickoffUTC:'2026-06-25T01:00:00Z' },
+  { home:'South Africa',  away:'South Korea',          hc:'RSA', ac:'KOR', kickoffUTC:'2026-06-25T01:00:00Z' },
+  { home:'Ecuador',       away:'Germany',              hc:'ECU', ac:'GER', kickoffUTC:'2026-06-25T20:00:00Z' },
+  { home:'Curaçao',       away:'Ivory Coast',          hc:'CUW', ac:'CIV', kickoffUTC:'2026-06-25T20:00:00Z' },
+  { home:'Japan',         away:'Sweden',               hc:'JPN', ac:'SWE', kickoffUTC:'2026-06-25T23:00:00Z' },
+  { home:'Tunisia',       away:'Netherlands',          hc:'TUN', ac:'NED', kickoffUTC:'2026-06-25T23:00:00Z' },
+  { home:'Türkiye',       away:'United States',        hc:'TUR', ac:'USA', kickoffUTC:'2026-06-26T02:00:00Z' },
+  { home:'Paraguay',      away:'Australia',            hc:'PAR', ac:'AUS', kickoffUTC:'2026-06-26T02:00:00Z' },
+  { home:'Norway',        away:'France',               hc:'NOR', ac:'FRA', kickoffUTC:'2026-06-26T19:00:00Z' },
+  { home:'Senegal',       away:'Iraq',                 hc:'SEN', ac:'IRQ', kickoffUTC:'2026-06-26T19:00:00Z' },
+  { home:'Cape Verde',    away:'Saudi Arabia',         hc:'CPV', ac:'KSA', kickoffUTC:'2026-06-27T00:00:00Z' },
+  { home:'Uruguay',       away:'Spain',                hc:'URU', ac:'ESP', kickoffUTC:'2026-06-27T00:00:00Z' },
+  { home:'Egypt',         away:'Iran',                 hc:'EGY', ac:'IRN', kickoffUTC:'2026-06-27T03:00:00Z' },
+  { home:'New Zealand',   away:'Belgium',              hc:'NZL', ac:'BEL', kickoffUTC:'2026-06-27T03:00:00Z' },
+  { home:'Panama',        away:'England',              hc:'PAN', ac:'ENG', kickoffUTC:'2026-06-27T21:00:00Z' },
+  { home:'Croatia',       away:'Ghana',                hc:'CRO', ac:'GHA', kickoffUTC:'2026-06-27T21:00:00Z' },
+  { home:'Colombia',      away:'Portugal',             hc:'COL', ac:'POR', kickoffUTC:'2026-06-27T23:30:00Z' },
+  { home:'DR Congo',      away:'Uzbekistan',           hc:'COD', ac:'UZB', kickoffUTC:'2026-06-27T23:30:00Z' },
+  { home:'Algeria',       away:'Austria',              hc:'ALG', ac:'AUT', kickoffUTC:'2026-06-28T02:00:00Z' },
+  { home:'Jordan',        away:'Argentina',            hc:'JOR', ac:'ARG', kickoffUTC:'2026-06-28T02:00:00Z' },
 ];
 
 /* trigram → flagcdn ISO code (photo-accurate flags when online) */
@@ -218,6 +272,8 @@ const ISO = {
   CAN:'ca', BIH:'ba', USA:'us', PAR:'py', CIV:'ci', ECU:'ec', BEL:'be', EGY:'eg',
   KSA:'sa', URU:'uy', IRN:'ir', NZL:'nz', FRA:'fr', SEN:'sn', IRQ:'iq', NOR:'no',
   ARG:'ar', ALG:'dz', AUT:'at', JOR:'jo',
+  MEX:'mx', RSA:'za', KOR:'kr', CZE:'cz', POR:'pt', COD:'cd', ENG:'gb-eng', CRO:'hr',
+  GHA:'gh', PAN:'pa', UZB:'uz', COL:'co',
 };
 
 /* Flags — one code path: real raster PNGs from flagcdn, keyed by the ISO map above.
@@ -357,7 +413,11 @@ function renderMatches(now){
       $homeName.textContent = $awayName.textContent = '';
       $upcoming.innerHTML = '';
     }
-    $centre.innerHTML = `<div class="live" style="animation:none;background:transparent;box-shadow:none;color:var(--label)">SEASON COMPLETE</div>`;
+    $centre.innerHTML =
+      `<div class="when">` +
+        `<div class="when-time" style="color:var(--label)">GROUP STAGE COMPLETE</div>` +
+        `<div class="when-lbl">KNOCKOUTS BEGIN 28 JUN</div>` +
+      `</div>`;
     return;
   }
 
